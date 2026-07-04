@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>上下文压缩时机 · 成本最优计算器</title>
+</head>
+<body>
+  <div class="page">
+    <div class="wrap">
+
+      <header>
+        <p class="eyebrow">上下文压缩 · 成本最优</p>
+        <h1>什么时机触发 compaction 最省钱?</h1>
+        <p class="lede">拖动参数,实时求解成本最优的压缩阈值。核心洞察:长上下文的主导成本不是"压缩那一下",而是<strong style="color:var(--teal)">每一轮都按缓存读价重读整段上下文</strong>的持有税——它把最优点推得比你以为的更早。</p>
+        <div class="formula">
+          <span>最优增长量</span>
+          <span><b>ΔC*</b> = <span class="sq">√</span>( 2·g·K<sub>fix</sub> / h )</span>
+          <span style="color:var(--faint)">·</span>
+          <span>阈值 <b>T*</b> = S + ΔC*</span>
+        </div>
+      </header>
+
+      <div class="grid">
+
+        <!-- ============ 控制台 ============ -->
+        <section class="card controls" aria-label="参数控制">
+
+          <div class="group">
+            <p class="gh">模型定价 <span class="synced" id="syncnote"></span></p>
+            <select class="model" id="model" aria-label="选择模型"></select>
+            <div class="dualprice">
+              <div class="field">
+                <div class="row"><label for="P">输入价</label><span class="unit">$/M</span></div>
+                <input class="num" id="P" type="number" min="0.1" step="0.1" value="5" style="width:100%" />
+              </div>
+              <div class="field">
+                <div class="row"><label for="Pout">输出价</label><span class="unit">$/M</span></div>
+                <input class="num" id="Pout" type="number" min="0.1" step="0.5" value="25" style="width:100%" />
+              </div>
+            </div>
+            <div class="dualprice mt">
+              <div class="field">
+                <div class="row"><label for="cr">缓存读</label><span class="unit">$/M</span></div>
+                <input class="num" id="cr" type="number" min="0.01" step="0.05" value="0.5" style="width:100%" />
+              </div>
+              <div class="field">
+                <div class="row"><label for="cw">缓存写·5min</label><span class="unit">$/M</span></div>
+                <input class="num" id="cw" type="number" min="0.01" step="0.05" value="6.25" style="width:100%" />
+              </div>
+            </div>
+          </div>
+
+          <div class="group">
+            <p class="gh">会话参数</p>
+            <div class="field">
+              <div class="row"><label for="g">每轮新增 token <span class="hint">g · 需求率</span></label>
+                <span class="valwrap"><input class="num" id="gNum" type="number" min="500" max="30000" step="100" value="5000" /><span class="unit">tok</span></span></div>
+              <input type="range" id="g" min="500" max="20000" step="100" value="5000" />
+            </div>
+            <div class="field">
+              <div class="row"><label for="Wnum">上下文窗口 <span class="hint">W</span></label>
+                <span class="valwrap"><input class="num" id="Wnum" type="number" min="50000" step="50000" value="1000000" /></span></div>
+              <div class="seg small" id="wpreset" role="group" aria-label="窗口预设" style="margin-top:8px">
+                <button type="button" data-w="200000" aria-pressed="false">200K</button>
+                <button type="button" data-w="500000" aria-pressed="false">500K</button>
+                <button type="button" data-w="1000000" aria-pressed="true">1M</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="group">
+            <p class="gh">压缩参数</p>
+            <div class="field">
+              <div class="row"><label for="S">压缩后地板 <span class="hint">S · 摘要+近期</span></label>
+                <span class="valwrap"><input class="num" id="Snum" type="number" min="2000" max="120000" step="1000" value="20000" /><span class="unit">tok</span></span></div>
+              <input type="range" id="S" min="4000" max="80000" step="1000" value="20000" />
+            </div>
+            <div class="field">
+              <div class="row"><label for="amp">重读放大系数 <span class="hint">压缩后重读文件</span></label>
+                <span class="valwrap"><input class="num" id="ampNum" type="number" min="1" max="20" step="0.5" value="1" /><span class="unit">×</span></span></div>
+              <input type="range" id="amp" min="1" max="20" step="0.5" value="1" />
+            </div>
+            <div class="field" style="margin-bottom:0">
+              <div class="row"><label>缓存 TTL</label></div>
+              <div class="seg small" id="ttl" role="group" aria-label="缓存 TTL">
+                <button type="button" data-t="5m" aria-pressed="true">5min · 写价</button>
+                <button type="button" data-t="1h" aria-pressed="false">1h · 写2×输入</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="group">
+            <p class="gh">对照:你的阈值</p>
+            <div class="field accent" style="margin-bottom:0">
+              <div class="row"><label for="your">触发点 = 窗口的</label>
+                <span class="valwrap"><input class="num" id="yourNum" type="number" min="5" max="99" step="1" value="90" /><span class="unit">%</span></span></div>
+              <input type="range" id="your" min="5" max="99" step="1" value="90" />
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ============ 仪表区 ============ -->
+        <section class="viz">
+
+          <div class="readouts">
+            <div class="card ro hero">
+              <p class="k">成本最优阈值 T*</p>
+              <div class="v" id="ro-tstar">132K</div>
+              <div class="sub" id="ro-tstar-sub">= 13% 窗口 · ΔC* 112K</div>
+            </div>
+            <div class="card ro">
+              <p class="k">最优点成本</p>
+              <div class="v" id="ro-optcost">$6.6</div>
+              <div class="sub">每 100 轮 · 仅阈值相关</div>
+            </div>
+            <div class="card ro">
+              <p class="k" id="ro-your-k">你的阈值 (90%)</p>
+              <div class="v" id="ro-yourcost">$23.4</div>
+              <div class="save" id="ro-save">最优可省 72%</div>
+            </div>
+          </div>
+
+          <div class="card chartcard">
+            <div class="legend">
+              <span class="li"><span class="sw" style="background:var(--total)"></span>总成本</span>
+              <span class="li"><span class="sw" style="background:var(--teal)"></span>读税(持有)</span>
+              <span class="li"><span class="sw" style="background:var(--clay)"></span>压缩开销</span>
+              <span class="li"><span class="sw dash"></span>最优 T*</span>
+            </div>
+            <div class="canvaswrap">
+              <canvas id="chart" aria-label="成本随压缩阈值变化的曲线图"></canvas>
+            </div>
+            <p class="cap">横轴:压缩触发阈值(token / 占窗口%) · 纵轴:每 100 轮的阈值相关成本($) · 点击曲线可设为你的阈值</p>
+          </div>
+
+          <div class="card punch">
+            <span class="dot"></span>
+            <p id="punch">在这套参数下,成本最优是在窗口 <b class="mono">13%</b> 处触发压缩;拖到 <b class="mono">90%</b>,阈值相关成本约是最优点的 <b class="mono">3.5 倍</b>。真正推高最优点的是"重读放大"——把它调大,看曲线谷底如何右移。</p>
+          </div>
+
+          <footer>
+            模型:<code>读税 = h·(S+T)/2</code>,<code>压缩开销 = g/(T−S)·K_fix</code>,其中 <code>h = 缓存读价</code>、<code>K_fix = amp·S·(输出价 + 写价)</code>。这是 EOQ(经济订货量)平方根解。假设:摘要地板 S 近似固定、每轮增长 g 恒定;未货币化"信息损失导致的返工"(会进一步右移最优点)。价格同步自 <a href="https://models.dev/" target="_blank" rel="noopener">models.dev</a>,含每个模型的实测缓存读/写价。
+          </footer>
+
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
