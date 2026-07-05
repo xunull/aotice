@@ -1,0 +1,23 @@
+{
+  "name": "aotice",
+  "version": "0.1.0",
+  "private": false,
+  "type": "module",
+  "description": "处方性 CLI:审计你的 Claude Code 会话,实测参数并给出成本最优的上下文压缩阈值(alpha)。",
+  "bin": {
+    "aotice": "src/cli.js"
+  },
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@aotice/compaction-model": "*"
+  }
+}

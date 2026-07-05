@@ -1,6 +1,5 @@
 // 成本-阈值曲线的 Canvas 绘制。
-import { total, readTax, comp, Tstar } from './model.js';
-import { fmtTok, fmtUSD, pct } from './format.js';
+import { total, readTax, comp, Tstar, fmtTok, fmtUSD, pct } from '@aotice/compaction-model';
 
 const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 

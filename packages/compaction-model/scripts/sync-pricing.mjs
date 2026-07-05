@@ -37,5 +37,5 @@ export const PRICING_SYNCED_AT = ${JSON.stringify(today)};
 export const ANTHROPIC_MODELS = ${JSON.stringify(models, null, 2)};
 `;
 
-await writeFile(new URL('../src/pricing.js', import.meta.url), body);
+await writeFile(new URL('../pricing.js', import.meta.url), body);
 console.log(`已同步 ${models.length} 个 Anthropic 模型 (${today}) ← models.dev`);

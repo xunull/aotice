@@ -1,8 +1,6 @@
 import './style.css';
-import { ANTHROPIC_MODELS, PRICING_SYNCED_AT } from './pricing.js';
+import { ANTHROPIC_MODELS, PRICING_SYNCED_AT, fmtTok, fmtUSD, pct, Tstar, dCstar, total } from '@aotice/compaction-model';
 import { draw } from './chart.js';
-import { fmtTok, fmtUSD, pct } from './format.js';
-import { Tstar, dCstar, total } from './model.js';
 
 const $ = (id) => document.getElementById(id);
 
