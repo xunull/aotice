@@ -4,6 +4,8 @@
 // 读你自己的 ~/.claude 会话记录,实测参数 → EOQ 最优压缩阈值 → 反事实节省估计。
 // 隐私:全部本地解析,零上传;只读 usage 字段,从不读消息正文。
 import { parseArgs } from 'node:util';
+import { realpathSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { analyze } from './analyze.js';
 import { renderReport } from './report.js';
 import { parseTranscripts } from './parser.js';
@@ -116,9 +118,19 @@ function replacerStripInternal(key, value) {
   return value;
 }
 
-// 直接执行(非 import)时运行
-const isMain = import.meta.url === `file://${process.argv[1]}`;
-if (isMain) {
+// 直接执行(非 import)时运行。
+// 关键:必须用 realpath 比较。npm/npx 的 bin 是符号链接(.bin/aotice → dist/cli.mjs),
+// 经它执行时 node 把 import.meta.url 解析成真实路径,而 process.argv[1] 是符号链接路径,
+// 直接字符串比较永远不等 → main 不跑 → `npx aotice` 零输出。realpathSync 解开符号链接后两者一致。
+export function isMainModule() {
+  if (!process.argv[1]) return false;
+  try {
+    return realpathSync(process.argv[1]) === fileURLToPath(import.meta.url);
+  } catch {
+    return false;
+  }
+}
+if (isMainModule()) {
   main(process.argv.slice(2))
     .then((code) => process.exit(code || 0))
     .catch((e) => {
