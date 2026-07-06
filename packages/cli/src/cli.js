@@ -1,5 +1,6 @@
-#!/usr/bin/env node
 // aotice — 处方性上下文压缩审计 CLI(alpha)。
+// 注:shebang 不在此处;发布产物 dist/cli.mjs 的 shebang 由 esbuild banner 注入(build.mjs)。
+// 开发期直接 `node src/cli.js` 无需 shebang。
 // 读你自己的 ~/.claude 会话记录,实测参数 → EOQ 最优压缩阈值 → 反事实节省估计。
 // 隐私:全部本地解析,零上传;只读 usage 字段,从不读消息正文。
 import { parseArgs } from 'node:util';

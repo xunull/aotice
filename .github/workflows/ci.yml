@@ -1,0 +1,44 @@
+name: CI
+
+# 同仓 PR 会同时触发 push 与 pull_request,故 push 限主分支;
+# v* tag 的发布交给 release.yml,这里不掺和。
+on:
+  push:
+    branches: [main]
+  pull_request: {}
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20, 22]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      - name: Install (full workspace)
+        run: npm ci
+
+      - name: Test
+        run: npm test -w aotice
+
+      - name: Bundle
+        run: npm run bundle -w aotice
+
+      # 冒烟必须在 CI 地板 node 20 也跑:打包产物若含不支持的动态 require,
+      # 只在本地 node 24 验不到。
+      - name: Smoke — run the bundled CLI
+        run: node packages/cli/dist/cli.mjs --help
+
+      - name: Calculator build (shared-package migration sanity)
+        run: npm run build:calculator

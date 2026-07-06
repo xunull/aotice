@@ -5,19 +5,26 @@
   "type": "module",
   "description": "处方性 CLI:审计你的 Claude Code 会话,实测参数并给出成本最优的上下文压缩阈值(alpha)。",
   "bin": {
-    "aotice": "src/cli.js"
+    "aotice": "dist/cli.mjs"
   },
   "files": [
-    "src",
+    "dist",
     "README.md"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xunull/aotice.git",
+    "directory": "packages/cli"
+  },
   "engines": {
     "node": ">=18"
   },
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "bundle": "node build.mjs"
   },
-  "dependencies": {
-    "@aotice/compaction-model": "*"
+  "devDependencies": {
+    "@aotice/compaction-model": "*",
+    "esbuild": "^0.28.0"
   }
 }
