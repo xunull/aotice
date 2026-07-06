@@ -1,0 +1,17 @@
+{
+  "name": "aotice-monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "aotice — 上下文压缩成本工具集(共享模型 + 交互计算器 + 处方性 CLI)。",
+  "workspaces": [
+    "packages/*",
+    "compaction-calculator"
+  ],
+  "scripts": {
+    "test": "npm test -w aotice",
+    "sync:pricing": "npm run sync:pricing -w @aotice/compaction-model",
+    "build:calculator": "npm run build -w compaction-cost-calculator",
+    "cli": "node packages/cli/src/cli.js"
+  }
+}

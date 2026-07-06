@@ -1,0 +1,18 @@
+{
+  "name": "compaction-cost-calculator",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "交互式计算器:求解 LLM 上下文压缩(compaction)的成本最优触发阈值。价格同步自 models.dev。",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@aotice/compaction-model": "*"
+  },
+  "devDependencies": {
+    "vite": "^7.0.0"
+  }
+}

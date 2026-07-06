@@ -1,0 +1,49 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+concurrency:
+  group: release-${{ github.ref }}
+
+permissions:
+  contents: read
+  id-token: write # npm provenance 需要 OIDC
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # pin node 22:provenance 需 npm ≥ 9.5,不能用 runner 环境 node。
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+          cache: npm
+
+      - name: Install (full workspace)
+        run: npm ci
+
+      # tag 与 package.json 版本必须一致,否则会发错版本或 EPUBLISHCONFLICT。
+      - name: Verify tag matches package version
+        run: |
+          PKG_VERSION="v$(node -p "require('./packages/cli/package.json').version")"
+          if [ "$PKG_VERSION" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::tag ${GITHUB_REF_NAME} != package.json version ${PKG_VERSION}"
+            exit 1
+          fi
+
+      # 测试与发布同 job 顺序步骤:红了在 publish 前中止。
+      - name: Test
+        run: npm test -w aotice
+
+      - name: Bundle
+        run: npm run bundle -w aotice
+
+      - name: Publish to npm (provenance)
+        run: npm publish -w aotice --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

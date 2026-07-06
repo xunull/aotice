@@ -1,0 +1,20 @@
+{
+  "name": "@aotice/compaction-model",
+  "version": "0.1.0",
+  "private": false,
+  "type": "module",
+  "description": "上下文压缩成本模型(EOQ 闭式解)与 Anthropic 定价表。计算器与 CLI 共用。",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+  "files": [
+    "index.js",
+    "model.js",
+    "pricing.js",
+    "format.js"
+  ],
+  "scripts": {
+    "sync:pricing": "node scripts/sync-pricing.mjs"
+  }
+}
