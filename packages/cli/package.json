@@ -1,15 +1,17 @@
 {
   "name": "aotice",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": false,
   "type": "module",
+  "license": "Apache-2.0",
   "description": "处方性 CLI:审计你的 Claude Code 会话,实测参数并给出成本最优的上下文压缩阈值(alpha)。",
   "bin": {
     "aotice": "dist/cli.mjs"
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "repository": {
     "type": "git",

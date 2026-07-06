@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": false,
   "type": "module",
+  "license": "Apache-2.0",
   "description": "上下文压缩成本模型(EOQ 闭式解)与 Anthropic 定价表。计算器与 CLI 共用。",
   "main": "index.js",
   "exports": {
