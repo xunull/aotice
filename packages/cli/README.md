@@ -49,12 +49,33 @@ npx aotice [options]
 
   --since <days>     Sessions modified in the last N days (default 30; 0 = all)
   --billing <mode>   api | subscription   (default: unknown → $ shown as API-equivalent)
+  --lang <zh|en>     Output language (default: auto-detect from $LANG)
   --json             Stable JSON (schema v1) instead of the terminal report
   --dry-run          List the files that WOULD be read, then exit (reads nothing)
   --paths <p,...>    Files/dirs to scan instead of ~/.claude/projects
   --root <dir>       Override the projects root
   -h, --help
 ```
+
+## Language / 语言
+
+The terminal report and `--help` are localized (English / 简体中文). Language is
+detected from your **system locale**, in this precedence:
+
+`--lang zh|en` → `AOTICE_LANG` → `LC_ALL` / `LC_MESSAGES` / `LANG` → default `en`.
+
+A locale starting with `zh` (e.g. `zh_CN.UTF-8`) → Chinese; anything else (incl.
+`C` / `POSIX` / unset) → English. Detection is **local only** — it reads env vars,
+never your IP or any network (that would break the privacy guarantee below).
+
+```bash
+aotice --lang zh          # force Chinese
+AOTICE_LANG=zh aotice     # same, via env
+```
+
+`--json` output is **never** localized: field names and values are a stable
+machine schema (v1), identical in any language. Technical terms (EOQ, cache hit,
+model ids, UPPER BOUND) stay English even in Chinese output.
 
 ## Privacy
 
