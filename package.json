@@ -5,8 +5,7 @@
   "type": "module",
   "description": "aotice — 上下文压缩成本工具集(共享模型 + 交互计算器 + 处方性 CLI)。",
   "workspaces": [
-    "packages/*",
-    "compaction-calculator"
+    "packages/*"
   ],
   "scripts": {
     "test": "npm test -w aotice",
