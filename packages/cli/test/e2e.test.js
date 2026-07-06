@@ -56,10 +56,15 @@ test('empty root → data_insufficient, no crash', async () => {
 });
 
 // --- CLI main() smoke: inject an output collector (no global patching → no test races) ---
+// 注入 LANG=en 让语言检测确定为英文,使这些英文断言不受运行机器 locale 影响。
 async function capture(argv) {
   let out = '';
   let err = '';
-  const code = await main(argv, { out: (s) => (out += s), err: (s) => (err += s) });
+  const code = await main(argv, {
+    out: (s) => (out += s),
+    err: (s) => (err += s),
+    env: { LANG: 'en_US.UTF-8' },
+  });
   return { code, out, err };
 }
 

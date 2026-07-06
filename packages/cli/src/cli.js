@@ -9,30 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { analyze } from './analyze.js';
 import { renderReport } from './report.js';
 import { parseTranscripts } from './parser.js';
-
-const HELP = `aotice — prescriptive compaction audit (alpha, experimental)
-
-USAGE
-  npx aotice [options]
-
-Reads ~/.claude/projects/**/*.jsonl locally, fits your real per-session
-parameters, and prints the cost-optimal compaction threshold plus a
-counterfactual "you could have saved $X" (upper bound, ledger recomputation).
-
-OPTIONS
-  --since <days>     Only consider sessions modified in the last N days (default 30; 0 = all)
-  --billing <mode>   api | subscription  (default: unknown → $ shown as API-equivalent)
-  --json             Emit stable JSON (schema v1) instead of the terminal report
-  --sweep            (reserved) sweep all thresholds instead of the EOQ interval
-  --dry-run          List the transcript files that WOULD be read, then exit (reads nothing)
-  --paths <p,...>    Comma-separated files/dirs to scan instead of ~/.claude/projects
-  --root <dir>       Override the projects root (default ~/.claude/projects)
-  -h, --help         Show this help
-
-PRIVACY
-  100% local. No network except an optional pricing sync at build time.
-  The parser only reads token-usage and compaction metadata — never message text.
-`;
+import { detectLang, t } from './i18n.js';
 
 function parsePaths(v) {
   if (!v) return undefined;
@@ -45,6 +22,10 @@ function parsePaths(v) {
 export async function main(argv, io = {}) {
   const out = io.out || ((s) => process.stdout.write(s));
   const err = io.err || ((s) => process.stderr.write(s));
+  const env = io.env || process.env;
+  // 先按环境检测语言,供解析错误路径用;解析成功后再让 --lang 覆盖。
+  let lang = detectLang({ env });
+
   let parsed;
   try {
     parsed = parseArgs({
@@ -52,6 +33,7 @@ export async function main(argv, io = {}) {
       options: {
         since: { type: 'string' },
         billing: { type: 'string' },
+        lang: { type: 'string' },
         json: { type: 'boolean', default: false },
         sweep: { type: 'boolean', default: false },
         'dry-run': { type: 'boolean', default: false },
@@ -62,25 +44,27 @@ export async function main(argv, io = {}) {
       allowPositionals: true,
     });
   } catch (e) {
-    err(`aotice: ${e.message}\n\n${HELP}`);
+    err(t(lang, 'errParse', e.message) + '\n\n' + t(lang, 'help'));
     return 2;
   }
 
   const { values } = parsed;
+  lang = detectLang({ override: values.lang, env }); // --lang / AOTICE_LANG 覆盖
+
   if (values.help) {
-    out(HELP);
+    out(t(lang, 'help'));
     return 0;
   }
 
   const billing = values.billing;
   if (billing && billing !== 'api' && billing !== 'subscription') {
-    err(`aotice: --billing must be 'api' or 'subscription'\n`);
+    err(t(lang, 'errBilling') + '\n');
     return 2;
   }
 
   const sinceDays = values.since != null ? Number(values.since) : 30;
   if (Number.isNaN(sinceDays) || sinceDays < 0) {
-    err(`aotice: --since must be a non-negative number of days\n`);
+    err(t(lang, 'errSince') + '\n');
     return 2;
   }
 
@@ -92,11 +76,12 @@ export async function main(argv, io = {}) {
     const sinceMs = sinceDays > 0 ? now - sinceDays * 86400000 : 0;
     const res = await parseTranscripts({ root: values.root, paths, sinceMs, dryRun: true });
     if (values.json) {
+      // --json 是稳定机器 schema,永不翻译。
       out(JSON.stringify({ dry_run: true, files: res.files, skipped: res.skipped }, null, 2) + '\n');
     } else {
-      out(`aotice --dry-run: would read ${res.files.length} file(s):\n`);
+      out(t(lang, 'dryRunHeader', res.files.length) + '\n');
       for (const f of res.files) out(`  ${f}\n`);
-      out(`  (${res.skipped.filesSkippedMtime} skipped by date, ${res.skipped.filesUnreadable} unreadable)\n`);
+      out(t(lang, 'dryRunFooter', res.skipped.filesSkippedMtime, res.skipped.filesUnreadable) + '\n');
     }
     return 0;
   }
@@ -104,9 +89,10 @@ export async function main(argv, io = {}) {
   const result = await analyze({ root: values.root, paths, sinceDays, billing });
 
   if (values.json) {
+    // --json 永不翻译:字段名与值必须稳定,不受语言影响。
     out(JSON.stringify(result, replacerStripInternal, 2) + '\n');
   } else {
-    out(renderReport(result) + '\n');
+    out(renderReport(result, lang) + '\n');
   }
   return result.data_insufficient ? 0 : 0;
 }
