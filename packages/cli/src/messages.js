@@ -135,8 +135,12 @@ export const MESSAGES = {
 
   // ── 默认输出(体检报告 / Style B)──
   bTitle: {
-    en: (model, days) => `compaction checkup · ${model} · ${days === 0 ? 'all history' : 'last ' + days + 'd'}`,
-    zh: (model, days) => `压缩时机体检 · ${model} · ${days === 0 ? '全部历史' : '近' + days + '天'}`,
+    en: (name) => `compaction checkup · ${name}`,
+    zh: (name) => `压缩时机体检 · ${name}`,
+  },
+  bSubline: {
+    en: (model, days, grade) => `${model} · ${days === 0 ? 'all history' : 'last ' + days + 'd'} · ${grade}`,
+    zh: (model, days, grade) => `${model} · ${days === 0 ? '全部历史' : '近' + days + '天'} · ${grade}`,
   },
   bGradeGood: { en: () => 'healthy ✅', zh: () => '良好 ✅' },
   bGradeTune: { en: () => 'tunable ⚙', zh: () => '可优化 ⚙' },

@@ -64,9 +64,9 @@ function renderProjectB(proj, lang, days, showSubsNote) {
   const row = (labelKey, value) => `  ${padLabel(_(labelKey), LBL)}${value}`;
   const L = [];
 
-  // 标题行 + 评级(评级右移)
-  const title = _('bTitle', model, days);
-  L.push(`${padLabel(title, 44)}${_(GRADE_LABEL[g])}`);
+  // 标题:项目名单独一行(可能很长),模型/窗口/评级放副行(不与长名抢位)
+  L.push(_('bTitle', proj.name));
+  L.push(_('bSubline', model, days, _(GRADE_LABEL[g])));
   L.push(RULE);
 
   // 你的时机

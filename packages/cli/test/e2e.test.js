@@ -79,6 +79,7 @@ test('CLI default report is the compact checkup (Style B)', async () => {
   const { code, out } = await capture(['--root', ROOT, '--since', '0', '--billing', 'api']);
   assert.equal(code, 0);
   assert.ok(out.includes('compaction checkup'));
+  assert.ok(out.includes('sample-proj'), 'default output MUST name the project (regression: name was dropped in Style B)');
   assert.ok(out.includes('sweet spot'));
   assert.ok(out.includes('full detail: --verbose'));
   assert.ok(!out.includes('EOQ threshold'), 'default stays compact, not verbose');
