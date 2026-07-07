@@ -70,6 +70,7 @@ test('default report is the compact checkup (Style B), not verbose', async () =>
   const zh = renderReport(result, 'zh');
   assert.ok(en.includes('compaction checkup') && en.includes('sweet spot'));
   assert.ok(zh.includes('压缩时机体检') && zh.includes('综合评价'));
+  assert.ok(en.includes('sample-proj') && zh.includes('sample-proj'), '默认输出必须带项目名(回归守卫)');
   assert.ok(!en.includes('EOQ threshold'), '默认应精简,不含 verbose 明细');
 });
 
