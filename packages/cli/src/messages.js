@@ -62,9 +62,13 @@ export const MESSAGES = {
       `  EOQ threshold:${tLo}–${tHi} tokens(${pLo}–${pHi} 窗口)— 依据:${basisWord.zh(basis)}`,
   },
   beyondWindow: { en: () => ' [optimum ≥ window]', zh: () => ' [最优 ≥ 窗口]' },
-  realTrigger: {
-    en: (tok, p) => `    your real auto-compact fires at ~${tok} (${p})`,
-    zh: (tok, p) => `    你的实际自动压缩触发点 ~${tok}(${p})`,
+  realTriggerAuto: {
+    en: (tok, p, n) => `    your auto-compact fires at ~${tok} (${p}, auto-only, n=${n})`,
+    zh: (tok, p, n) => `    你的自动压缩触发点 ~${tok}(${p},仅自动,n=${n})`,
+  },
+  realTriggerManual: {
+    en: (n, med) => `    plus ${n} manual /compact (median ~${med})`,
+    zh: (n, med) => `    另有手动 /compact ${n} 次(中位 ~${med})`,
   },
 
   // 回放
@@ -87,8 +91,8 @@ export const MESSAGES = {
     zh: (clean, excl) => `    干净段:${clean} · 排除(过短/脏):${excl}`,
   },
   knobLine: {
-    en: (knob) => `  Knob (pending verification — see README): ${knob}`,
-    zh: (knob) => `  旋钮(待验证 — 见 README):${knob}`,
+    en: (knob) => `  Knob: ${knob}`,
+    zh: (knob) => `  旋钮:${knob}`,
   },
 
   // ── 合计 ──
@@ -153,11 +157,16 @@ export const MESSAGES = {
   bLblCost: { en: () => 'cost', zh: () => '本期成本' },
   bLblAction: { en: () => 'suggested', zh: () => '可选动作' },
 
-  bTimingVal: {
-    en: (p, tok) => `compacts at ~${p} of window (~${tok})`,
-    zh: (p, tok) => `聊到 ~${p} 窗口才压缩(~${tok})`,
+  bTimingAuto: {
+    en: (p, tok) => `auto-compacts at ~${p} of window (~${tok})`,
+    zh: (p, tok) => `自动压缩在 ~${p} 窗口才触发(~${tok})`,
   },
   bTimingNone: { en: () => 'no auto-compaction in this window', zh: () => '窗口内无自动压缩记录' },
+  bLblManual: { en: () => 'manual', zh: () => '手动压缩' },
+  bManualVal: {
+    en: (n, med) => `${n}× /compact (median ~${med})`,
+    zh: (n, med) => `/compact ${n} 次(中位 ~${med})`,
+  },
   bOptimalVal: { en: (lo, hi) => `${lo} – ${hi}`, zh: (lo, hi) => `${lo} – ${hi}` },
   bVerdictGood: {
     en: () => 'near the sweet spot — little to gain',
@@ -184,8 +193,8 @@ export const MESSAGES = {
     zh: () => '            ($ 按 API 价;订阅制省的是额度不是现金)',
   },
   bActionVal: {
-    en: (p) => `set auto-compaction to ~${p} (experimental)`,
-    zh: (p) => `把自动压缩阈值设到约 ${p}(实验性)`,
+    en: (p) => `set auto-compaction to ~${p}`,
+    zh: (p) => `把自动压缩阈值设到约 ${p}`,
   },
   bFooter: {
     en: (date, mode) => `pricing ${date} · billing ${mode} · full detail: --verbose`,

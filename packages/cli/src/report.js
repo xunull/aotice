@@ -40,7 +40,7 @@ function padLabel(s, cols) {
 
 // 评级:实际触发点相对最省区间的位置。落在区间内或更早 → 良好;略晚 → 可优化;明显晚 → 偏晚。
 function grade(proj) {
-  const real = proj.realTriggerPreTokens;
+  const real = proj.autoTriggerPreTokens; // 只按"自动压缩"评级,手动 /compact 不算
   if (!real) return 'nodata';
   const realPct = real / proj.window;
   const optHi = proj.recommendation.threshold_pct[1];
@@ -69,11 +69,14 @@ function renderProjectB(proj, lang, days, showSubsNote) {
   L.push(_('bSubline', model, days, _(GRADE_LABEL[g])));
   L.push(RULE);
 
-  // 你的时机
-  const timing = proj.realTriggerPreTokens
-    ? _('bTimingVal', pctStr(proj.realTriggerPreTokens / proj.window), fmtTok(proj.realTriggerPreTokens))
-    : _('bTimingNone');
-  L.push(row('bLblTiming', timing));
+  // 你的时机:自动压缩触发点(auto-only);手动 /compact 另起一行
+  const auto = proj.autoTriggerPreTokens;
+  L.push(
+    row('bLblTiming', auto ? _('bTimingAuto', pctStr(auto / proj.window), fmtTok(auto)) : _('bTimingNone'))
+  );
+  if (proj.manualCompactions > 0) {
+    L.push(row('bLblManual', _('bManualVal', proj.manualCompactions, proj.manualMedianPreTokens ? fmtTok(proj.manualMedianPreTokens) : '—')));
+  }
   L.push(row('bLblOptimal', _('bOptimalVal', pctStr(rec.threshold_pct[0]), pctStr(rec.threshold_pct[1]))));
   L.push(row('bLblVerdict', _(VERDICT[g])));
 
@@ -121,8 +124,11 @@ export function renderProject(proj, lang = 'en') {
   let recLine = _('eoqThreshold', fmtTok(tLo), fmtTok(tHi), pctStr(pLo), pctStr(pHi), rec.basis);
   if (rec.beyond_window) recLine += _('beyondWindow');
   L.push(recLine);
-  if (proj.realTriggerPreTokens) {
-    L.push(_('realTrigger', fmtTok(proj.realTriggerPreTokens), pctStr(proj.realTriggerPreTokens / proj.window)));
+  if (proj.autoTriggerPreTokens) {
+    L.push(_('realTriggerAuto', fmtTok(proj.autoTriggerPreTokens), pctStr(proj.autoTriggerPreTokens / proj.window), proj.autoCompactions));
+  }
+  if (proj.manualCompactions > 0) {
+    L.push(_('realTriggerManual', proj.manualCompactions, proj.manualMedianPreTokens ? fmtTok(proj.manualMedianPreTokens) : '—'));
   }
 
   const r = proj.replay;

@@ -105,7 +105,10 @@ function synthResult(realTok, optHiPct) {
         name: 'p',
         model: 'claude-opus-4-8',
         window: 1000000,
-        realTriggerPreTokens: realTok,
+        autoTriggerPreTokens: realTok,
+        autoCompactions: 1,
+        manualCompactions: 0,
+        manualMedianPreTokens: null,
         recommendation: { threshold_tokens: [200000, 300000], threshold_pct: [0.2, optHiPct], knob: { value: 'k' } },
         replay: {
           actual_usd: 1,

@@ -14,25 +14,29 @@ npx aotice
 ```
 
 ```
-compaction checkup · claude-opus-4-7 · all history        late ⚠
-────────────────────────────────────────────────────────────────
-  your timing compacts at ~50% of window (~501K)
+compaction checkup · my-app
+claude-opus-4-7 · all history · late ⚠
+────────────────────────────────────────
+  your timing auto-compacts at ~92% of window (~920K)
+  manual      6× /compact (median ~550K)
   sweet spot  21% – 30%
   verdict     compacting late — clear room to improve
 
   cost        actual $374 · ideal ~$194 · up to 48% off
 
-  suggested   set auto-compaction to ~21% (experimental)
-              CLAUDE_AUTOCOMPACT_PCT_OVERRIDE≈21 (or /compact at ~211K tokens)
+  suggested   set auto-compaction to ~21%
+              CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=21 (or /compact at ~211K tokens)
 
 pricing 2026-07-03 · billing api · full detail: --verbose
 ```
 
-Read it: this session lets context grow to ~50% of the window before
-auto-compacting; the cost-optimal point is ~21–30%. Compacting earlier would
-cut the read-tax by up to ~48% here. The default output is this compact
-checkup — run **`aotice --verbose`** for the full per-parameter breakdown
-(measured `g` / `S` / cache-hit, the EOQ interval, ledger-recomputation replay).
+Read it: Claude Code's **auto**-compaction only fires near the limit (~92% here —
+it has no early/proactive mode), which is far past the cost-optimal ~21–30%. You
+compensate with manual `/compact`, but setting
+`CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=21` makes auto do it for you, cutting the
+read-tax by up to ~48%. The default output is this compact checkup — run
+**`aotice --verbose`** for the full per-parameter breakdown (measured `g` / `S` /
+cache-hit, the EOQ interval, ledger-recomputation replay).
 
 ## Why earlier?
 
@@ -116,9 +120,15 @@ model ids, UPPER BOUND) stay English even in Chinese output.
 - **S may not scale to earlier thresholds.** `S` is measured at your *actual*
   (late) compaction points; the floor at an earlier threshold could differ. A manual
   `/compact` probe at low context would confirm it (planned).
-- **The knob is pending verification.** `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` exists in
-  Claude Code but its exact semantics (used-% vs remaining-%) are not yet confirmed;
-  the fallback is a manual `/compact at ~NK tokens` suggestion.
+- **Auto vs manual.** `aotice` reports the **auto-compact** trigger point (from
+  `compactMetadata.trigger === 'auto'`) separately from your manual `/compact` calls.
+  Claude Code auto-compacts only near the limit (~90–100% of the window; it has no
+  proactive/early compaction), so the auto trigger is usually much later than the
+  cost-optimal point — that gap is the opportunity.
+- **The knob is confirmed.** `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` = the **used-window
+  percentage** at which auto-compaction triggers; it can only be **lowered** (compact
+  earlier), never raised. So the suggested value (below the default) is always valid.
+  To turn auto-compaction off entirely: `DISABLE_AUTO_COMPACT=1`.
 - **Format is reverse-engineered.** Baseline: **Claude Code v2.1.200** JSONL. A
   format change upstream can break parsing; unknown shapes degrade gracefully
   (bad lines are skipped and counted, never fatal).
