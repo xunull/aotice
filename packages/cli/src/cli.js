@@ -34,6 +34,7 @@ export async function main(argv, io = {}) {
         since: { type: 'string' },
         billing: { type: 'string' },
         lang: { type: 'string' },
+        verbose: { type: 'boolean', default: false },
         json: { type: 'boolean', default: false },
         sweep: { type: 'boolean', default: false },
         'dry-run': { type: 'boolean', default: false },
@@ -92,7 +93,7 @@ export async function main(argv, io = {}) {
     // --json 永不翻译:字段名与值必须稳定,不受语言影响。
     out(JSON.stringify(result, replacerStripInternal, 2) + '\n');
   } else {
-    out(renderReport(result, lang) + '\n');
+    out(renderReport(result, lang, values.verbose) + '\n');
   }
   return result.data_insufficient ? 0 : 0;
 }

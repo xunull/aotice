@@ -75,12 +75,21 @@ test('CLI --help exits 0 and prints usage', async () => {
   assert.ok(out.includes('PRIVACY'));
 });
 
-test('CLI terminal report renders', async () => {
+test('CLI default report is the compact checkup (Style B)', async () => {
   const { code, out } = await capture(['--root', ROOT, '--since', '0', '--billing', 'api']);
   assert.equal(code, 0);
-  assert.ok(out.includes('aotice — prescriptive compaction audit'));
+  assert.ok(out.includes('compaction checkup'));
+  assert.ok(out.includes('sweet spot'));
+  assert.ok(out.includes('full detail: --verbose'));
+  assert.ok(!out.includes('EOQ threshold'), 'default stays compact, not verbose');
+});
+
+test('CLI --verbose shows the full parameter breakdown', async () => {
+  const { code, out } = await capture(['--root', ROOT, '--since', '0', '--billing', 'api', '--verbose']);
+  assert.equal(code, 0);
   assert.ok(out.includes('EOQ threshold'));
   assert.ok(out.includes('UPPER BOUND'));
+  assert.ok(out.includes('Replay (ledger recomputation'));
 });
 
 test('CLI --json emits valid parseable JSON', async () => {

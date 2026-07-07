@@ -42,14 +42,14 @@ test('t: returns per-language string, interpolates, falls back on missing', () =
   assert.equal(t('en', 'no_such_key_xyz'), 'no_such_key_xyz'); // 缺 key → 返回 key
 });
 
-// ── 报告 zh vs en ──
-async function renderBoth() {
+// ── 报告 zh vs en（--verbose 详细格式）──
+async function verboseBoth() {
   const result = await analyze({ root: ROOT, sinceDays: 0, billing: 'api' });
-  return { en: renderReport(result, 'en'), zh: renderReport(result, 'zh') };
+  return { en: renderReport(result, 'en', true), zh: renderReport(result, 'zh', true) };
 }
 
-test('report renders Chinese vs English by lang', async () => {
-  const { en, zh } = await renderBoth();
+test('verbose report renders Chinese vs English by lang', async () => {
+  const { en, zh } = await verboseBoth();
   assert.match(en, /Project:/);
   assert.match(en, /Replay \(ledger recomputation/);
   assert.ok(zh.includes('项目:'));
@@ -57,11 +57,20 @@ test('report renders Chinese vs English by lang', async () => {
   assert.notEqual(en, zh);
 });
 
-test('technical terms stay English in zh output', async () => {
-  const { zh } = await renderBoth();
+test('technical terms stay English in zh verbose output', async () => {
+  const { zh } = await verboseBoth();
   for (const term of ['EOQ threshold', 'cache hit', 'UPPER BOUND', '[EXPERIMENTAL]']) {
     assert.ok(zh.includes(term), `zh 报告应保留术语 "${term}"`);
   }
+});
+
+test('default report is the compact checkup (Style B), not verbose', async () => {
+  const result = await analyze({ root: ROOT, sinceDays: 0, billing: 'api' });
+  const en = renderReport(result, 'en'); // 默认 verbose=false
+  const zh = renderReport(result, 'zh');
+  assert.ok(en.includes('compaction checkup') && en.includes('sweet spot'));
+  assert.ok(zh.includes('压缩时机体检') && zh.includes('综合评价'));
+  assert.ok(!en.includes('EOQ threshold'), '默认应精简,不含 verbose 明细');
 });
 
 // ── --json 永不翻译:zh 与 en 逐字节相同 ──
@@ -82,6 +91,40 @@ test('--json output is byte-identical regardless of language', async () => {
   assert.equal(parsed.version, 1);
 });
 
+// ── 评级逻辑:实际触发点相对最省区间 ──
+function synthResult(realTok, optHiPct) {
+  return {
+    data_insufficient: false,
+    billing_mode: 'api',
+    since_days: 30,
+    pricing_synced_at: '2026-07-01',
+    totals: { actual_usd: 1, saving_usd_upper_bound: 0, saving_pct_upper_bound: 0 },
+    projects: [
+      {
+        name: 'p',
+        model: 'claude-opus-4-8',
+        window: 1000000,
+        realTriggerPreTokens: realTok,
+        recommendation: { threshold_tokens: [200000, 300000], threshold_pct: [0.2, optHiPct], knob: { value: 'k' } },
+        replay: {
+          actual_usd: 1,
+          counterfactual_usd: [1, 1],
+          saving_usd_upper_bound: 0,
+          saving_pct_upper_bound: 0,
+          clean_segments: 1,
+          excluded_segments: 0,
+          window_days: 30,
+        },
+      },
+    ],
+  };
+}
+
+test('grade: within sweet spot → healthy; far above → late', () => {
+  assert.ok(renderReport(synthResult(440000, 0.58), 'en').includes('healthy'), 'real 44% ≤ optHi 58% → healthy');
+  assert.ok(renderReport(synthResult(900000, 0.3), 'en').includes('late'), 'real 90% ≫ optHi 30% → late');
+});
+
 // ── 自动检测端到端:LANG=zh 触发中文报告 ──
 test('main auto-detects zh from LANG env (no --lang)', async () => {
   let out = '';
@@ -90,5 +133,5 @@ test('main auto-detects zh from LANG env (no --lang)', async () => {
     err: () => {},
     env: { LANG: 'zh_CN.UTF-8' },
   });
-  assert.match(out, /项目:/, 'LANG=zh 应自动出中文报告');
+  assert.match(out, /压缩时机体检/, 'LANG=zh 应自动出中文报告');
 });

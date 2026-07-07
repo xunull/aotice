@@ -14,20 +14,25 @@ npx aotice
 ```
 
 ```
-Project: my-app
-  model: claude-opus-4-7 (1M window)
-  Measured:  g = 971/turn (n=894, high) · cache hit 97% · floor S = 97K (n=2)
-  Assumed:   amp = 1 (not measurable — behavioral, see README)
-  EOQ threshold: 211K–295K tokens (21%–30% of window) — basis: measured
-    your real auto-compact fires at ~501K (50%)
-  Replay (ledger recomputation, last all):
-    actual $374 vs counterfactual $194–$192  (API-equivalent estimate)
-    → estimated saving up to $179 (48%) — UPPER BOUND, quality/rework not modeled [EXPERIMENTAL]
+compaction checkup · claude-opus-4-7 · all history        late ⚠
+────────────────────────────────────────────────────────────────
+  your timing compacts at ~50% of window (~501K)
+  sweet spot  21% – 30%
+  verdict     compacting late — clear room to improve
+
+  cost        actual $374 · ideal ~$194 · up to 48% off
+
+  suggested   set auto-compaction to ~21% (experimental)
+              CLAUDE_AUTOCOMPACT_PCT_OVERRIDE≈21 (or /compact at ~211K tokens)
+
+pricing 2026-07-03 · billing api · full detail: --verbose
 ```
 
-Translation: this session lets context grow to ~50% of the window before
-auto-compacting. The cost-optimal point is ~21–30%. Compacting earlier would
-have cut the read-tax by up to ~48% on this project.
+Read it: this session lets context grow to ~50% of the window before
+auto-compacting; the cost-optimal point is ~21–30%. Compacting earlier would
+cut the read-tax by up to ~48% here. The default output is this compact
+checkup — run **`aotice --verbose`** for the full per-parameter breakdown
+(measured `g` / `S` / cache-hit, the EOQ interval, ledger-recomputation replay).
 
 ## Why earlier?
 
