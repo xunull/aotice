@@ -133,6 +133,67 @@ export const MESSAGES = {
   errParse: { en: (msg) => `aotice: ${msg}`, zh: (msg) => `aotice:${msg}` },
   errFatal: { en: (e) => `aotice: fatal: ${e}`, zh: (e) => `aotice:致命错误:${e}` },
 
+  // ── 默认输出(体检报告 / Style B)──
+  bTitle: {
+    en: (model, days) => `compaction checkup · ${model} · ${days === 0 ? 'all history' : 'last ' + days + 'd'}`,
+    zh: (model, days) => `压缩时机体检 · ${model} · ${days === 0 ? '全部历史' : '近' + days + '天'}`,
+  },
+  bGradeGood: { en: () => 'healthy ✅', zh: () => '良好 ✅' },
+  bGradeTune: { en: () => 'tunable ⚙', zh: () => '可优化 ⚙' },
+  bGradeLate: { en: () => 'late ⚠', zh: () => '偏晚 ⚠' },
+  bGradeNoData: { en: () => '—', zh: () => '—' },
+
+  bLblTiming: { en: () => 'your timing', zh: () => '你的时机' },
+  bLblOptimal: { en: () => 'sweet spot', zh: () => '最省区间' },
+  bLblVerdict: { en: () => 'verdict', zh: () => '综合评价' },
+  bLblCost: { en: () => 'cost', zh: () => '本期成本' },
+  bLblAction: { en: () => 'suggested', zh: () => '可选动作' },
+
+  bTimingVal: {
+    en: (p, tok) => `compacts at ~${p} of window (~${tok})`,
+    zh: (p, tok) => `聊到 ~${p} 窗口才压缩(~${tok})`,
+  },
+  bTimingNone: { en: () => 'no auto-compaction in this window', zh: () => '窗口内无自动压缩记录' },
+  bOptimalVal: { en: (lo, hi) => `${lo} – ${hi}`, zh: (lo, hi) => `${lo} – ${hi}` },
+  bVerdictGood: {
+    en: () => 'near the sweet spot — little to gain',
+    zh: () => '已接近最省区间,差距很小',
+  },
+  bVerdictTune: {
+    en: () => 'a bit late — a small tweak helps',
+    zh: () => '比最省略晚,微调有帮助',
+  },
+  bVerdictLate: {
+    en: () => 'compacting late — clear room to improve',
+    zh: () => '压得偏晚,有明显优化空间',
+  },
+  bVerdictNoData: {
+    en: () => 'no compaction seen — can’t compare your timing',
+    zh: () => '无压缩记录,无法对比你的时机',
+  },
+  bCostVal: {
+    en: (a, c, p) => `actual ${a} · ideal ~${c} · up to ${p} off`,
+    zh: (a, c, p) => `实际 ${a} · 理论最低 ~${c} · 上限差 ${p}`,
+  },
+  bCostNoteSubs: {
+    en: () => '            ($ is API-equivalent; on a subscription you save quota, not cash)',
+    zh: () => '            ($ 按 API 价;订阅制省的是额度不是现金)',
+  },
+  bActionVal: {
+    en: (p) => `set auto-compaction to ~${p} (experimental)`,
+    zh: (p) => `把自动压缩阈值设到约 ${p}(实验性)`,
+  },
+  bFooter: {
+    en: (date, mode) => `pricing ${date} · billing ${mode} · full detail: --verbose`,
+    zh: (date, mode) => `定价同步 ${date} · 计费 ${mode} · 完整明细见 --verbose`,
+  },
+  bTotal: {
+    en: (days, a, s, p) =>
+      `TOTAL (${days === 0 ? 'all' : 'last ' + days + 'd'}): actual ${a} · save up to ~${s} (${p}, upper bound)`,
+    zh: (days, a, s, p) =>
+      `合计(${days === 0 ? '全部' : '近' + days + '天'}):实际 ${a} · 最多可省 ~${s}(${p},上限)`,
+  },
+
   // ── --help(整块)──
   help: {
     en: () => `aotice — prescriptive compaction audit (alpha, experimental)
@@ -148,6 +209,7 @@ OPTIONS
   --since <days>     Only consider sessions modified in the last N days (default 30; 0 = all)
   --billing <mode>   api | subscription  (default: unknown → $ shown as API-equivalent)
   --lang <zh|en>     Force output language (default: auto-detect from $LANG; AOTICE_LANG also works)
+  --verbose          Full parameter breakdown (default is a compact checkup)
   --json             Emit stable JSON (schema v1) instead of the terminal report
   --sweep            (reserved) sweep all thresholds instead of the EOQ interval
   --dry-run          List the transcript files that WOULD be read, then exit (reads nothing)
@@ -171,6 +233,7 @@ PRIVACY
   --since <天数>     只看最近 N 天修改过的会话(默认 30;0 = 全部)
   --billing <模式>   api | subscription(默认:unknown → 美元按 API 等价显示)
   --lang <zh|en>     强制输出语言(默认:按 $LANG 自动检测;也可用 AOTICE_LANG)
+  --verbose          完整参数明细(默认是简明体检)
   --json             输出稳定 JSON(schema v1),而非终端报告
   --sweep            (预留)扫所有阈值,而非只 EOQ 区间
   --dry-run          只列将读取的会话文件,然后退出(不读取任何内容)
