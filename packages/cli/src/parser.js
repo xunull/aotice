@@ -22,7 +22,8 @@ function extractRecord(obj) {
   // 压缩事件:isCompactSummary 或带 compactMetadata
   if (obj && (obj.isCompactSummary === true || obj.compactMetadata)) {
     const pre = obj.compactMetadata?.preTokens ?? null;
-    return { kind: 'compaction', preTokens: pre, ts: tsMs(obj.timestamp) };
+    const trigger = obj.compactMetadata?.trigger ?? null; // 'auto' | 'manual' | null
+    return { kind: 'compaction', preTokens: pre, trigger, ts: tsMs(obj.timestamp) };
   }
   // 只关心带 usage 的 assistant 轮次
   if (!obj || obj.type !== 'assistant') return null;
@@ -97,7 +98,7 @@ async function parseFile(path, skipped) {
       const rec = extractRecord(obj);
       if (!rec) continue;
       if (rec.kind === 'compaction') {
-        compactions.push({ preTokens: rec.preTokens, ts: rec.ts, order: order++ });
+        compactions.push({ preTokens: rec.preTokens, trigger: rec.trigger, ts: rec.ts, order: order++ });
         continue;
       }
       if (rec.isSidechain) continue; // sidechain 属独立时间线,主线不计入 g 拟合

@@ -62,14 +62,26 @@ function analyzeProject(project) {
   const savingUpper = Math.max(0, rLo.savingUSD);
   const savingLower = Math.max(0, rHi.savingUSD);
 
+  // 自动 vs 手动压缩分开统计:auto 才是"自动压缩触发点";手动 /compact 另算。
+  // (混算是历史 bug:auto 在窗口 ~100% 触发,手动在用户随手处,平均出来的数字两头不像。)
+  const median = (arr) => {
+    const s = arr.filter((x) => x != null).sort((a, b) => a - b);
+    return s.length ? s[Math.floor(s.length / 2)] : null;
+  };
+  const autos = project.compactions.filter((c) => c.trigger === 'auto');
+  const manuals = project.compactions.filter((c) => c.trigger === 'manual');
+  const autoTrigger = median(autos.map((c) => c.preTokens));
+  const manualMedian = median(manuals.map((c) => c.preTokens));
+
   return {
     name: project.name,
     model: domId,
     modelSource,
     window: W,
-    realTriggerPreTokens: project.compactions.length
-      ? Math.round(project.compactions.reduce((a, c) => a + (c.preTokens || 0), 0) / project.compactions.length)
-      : null,
+    autoTriggerPreTokens: autoTrigger, // 仅自动压缩的中位触发点(auto-only)
+    autoCompactions: autos.length,
+    manualCompactions: manuals.length,
+    manualMedianPreTokens: manualMedian,
     params: {
       g: params.g,
       S: params.S,
@@ -85,8 +97,9 @@ function analyzeProject(project) {
       beyond_window: beyond,
       knob: {
         type: 'env',
-        value: `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE≈${Math.round((tLo / W) * 100)} (or /compact at ~${Math.round(tLo / 1000)}K tokens)`,
-        verified: false,
+        // 语义已核实(官方 env-vars 文档):OVERRIDE = 触发压缩的"已用窗口百分比",只能调低(提前压)。
+        value: `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=${Math.round((tLo / W) * 100)} (or /compact at ~${Math.round(tLo / 1000)}K tokens)`,
+        verified: true,
       },
     },
     replay: {

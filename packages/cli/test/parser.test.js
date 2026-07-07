@@ -46,6 +46,7 @@ test('compaction event captured with preTokens', async () => {
   const { proj } = await parseSample();
   assert.equal(proj.compactions.length, 1);
   assert.equal(proj.compactions[0].preTokens, 900000);
+  assert.equal(proj.compactions[0].trigger, 'auto', 'compactMetadata.trigger 必须被读入');
 });
 
 test('0-token turn kept for cost but excluded from context segmentation', async () => {

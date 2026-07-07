@@ -28,12 +28,22 @@ test('analyze produces the v1 result shape', async () => {
   const [tLo, tHi] = p.recommendation.threshold_tokens;
   assert.ok(tLo > 0 && tHi >= tLo, `threshold ${tLo}..${tHi}`);
   assert.equal(p.recommendation.basis, 'measured');
-  assert.equal(p.recommendation.knob.verified, false);
+  assert.equal(p.recommendation.knob.verified, true); // 语义已核实(官方 env-vars 文档)
 
   // replay bookkeeping present
   assert.ok(p.replay.actual_usd > 0);
   assert.equal(p.replay.threshold_used_tokens.length, 2);
   assert.ok(p.replay.saving_usd_upper_bound >= 0);
+});
+
+test('analyze splits auto vs manual compaction (auto-only trigger point)', async () => {
+  const r = await analyze({ root: ROOT, sinceDays: 0, billing: 'api' });
+  const p = r.projects[0];
+  // fixture 有 1 个 auto 压缩(preTokens 900K),无手动 → auto-only,不混算
+  assert.equal(p.autoTriggerPreTokens, 900000);
+  assert.equal(p.autoCompactions, 1);
+  assert.equal(p.manualCompactions, 0);
+  assert.ok(!('realTriggerPreTokens' in p), '旧的混算字段应已移除');
 });
 
 test('billing defaults to unknown when no flag given', async () => {
